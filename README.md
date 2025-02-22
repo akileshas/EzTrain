@@ -1,2 +1,8 @@
-# LLM4Decompile
-LLM4Decompile: An open-source LLM series (1.3B–33B) for decompiling binary code into high-level source, outperforming GPT-4o and Ghidra in readability and executability.
+# EzTrain
+
+EzTrain is a simple and powerful platform that allows anyone to train machine learning \
+models effortlessly.
+
+
+Whether you're building models for images, sounds, or other data, EzTrain provides a \
+user-friendly interface to get started—no coding or expertise required.
