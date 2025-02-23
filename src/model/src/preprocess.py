@@ -32,5 +32,5 @@ def preprocess_image(
     image_path: str,
     transform: transforms.Compose,
 ) -> torch.Tensor:
-    image = Image(image_path).convert("RGB")
+    image = Image.open(image_path).convert("RGB")
     return transform(image).unsqueeze(0)
