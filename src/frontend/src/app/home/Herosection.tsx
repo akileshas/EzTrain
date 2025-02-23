@@ -2,8 +2,14 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function ContentWithVideo() {
+  const router = useRouter();
+	const handleClick = ()=>{
+			
+      router.push(`/train`);
+	};
   return (
     <section className="mx-[20%] my-[10%] py-10 flex flex-col md:flex-row items-start justify-between">
       {/* Left Content */}
@@ -13,7 +19,7 @@ export default function ContentWithVideo() {
           Here is some descriptive text about your project or product. 
           Keep it concise, engaging, and informative for the reader.
         </p>
-        <button className="px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition">
+        <button className="px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition" onClick={handleClick}>
           Get Started
         </button>
       </div>
