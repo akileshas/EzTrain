@@ -1,0 +1,5 @@
+*.zip
+cifar-10/
+roboflow_cat/
+roboflow_dog/
+class-*/

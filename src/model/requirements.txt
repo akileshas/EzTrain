@@ -1,0 +1,4 @@
+ultralytics
+alibi-detect
+avalanche-lib[all]
+lightning
