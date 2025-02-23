@@ -13,41 +13,36 @@ from .constants import ROOT_DATA_DIR
 
 
 class AudioDataset(Dataset):
-    def __init__(
-        self,
-        root_dir: str,
-        transform=None,
-    ):
+    def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
         self.transform = transform
-        self.data = []
+        self.audio_files = []
         self.labels = []
-        self.class_map = {}
 
-        for idx, class_name in enumerate(sorted(os.listdir(root_dir))):
-            if class_name.startswith("class-"):
-                self.class_map[class_name] = idx
+        # Get class-to-index mapping from `get_classes()`
+        self.class_to_idx = get_classes(root_dir)
 
-        for class_name, label in self.class_map.items():
-            class_dir = os.path.join(root_dir, class_name)
-            for file_name in os.listdir(class_dir):
-                if file_name.endswith(".wav"):
-                    self.data.append(os.path.join(class_dir, file_name))
-                    self.labels.append(label)
+        for class_name, label_idx in self.class_to_idx.items():
+            class_path = os.path.join(root_dir, class_name)
+            if os.path.isdir(class_path):
+                for file in os.listdir(class_path):
+                    if file.endswith(".wav"):
+                        self.audio_files.append(os.path.join(class_path, file))
+                        self.labels.append(label_idx)
 
-        def __len__(self):
-            return len(self.data)
+    def __len__(self):
+        return len(self.audio_files)
 
-        def __getitem__(self, idx):
-            file_path = self.data[idx]
-            label = self.labels[idx]
+    def __getitem__(self, idx):
+        audio_path = self.audio_files[idx]
+        label = self.labels[idx]
 
-            waveform, sample_rate = torchaudio.load(file_path)
+        waveform, sample_rate = torchaudio.load(audio_path)
 
-            if self.transform:
-                waveform = self.transform(waveform)
+        if self.transform:
+            waveform = self.transform(waveform)
 
-            return waveform, label
+        return waveform, label
 
 
 def get_classes(
@@ -66,6 +61,23 @@ def get_classes(
             )
         )
     }
+
+
+def collate_fn(batch):
+    waveforms, labels = zip(*batch)
+
+    max_len = max(wf.shape[-1] for wf in waveforms)
+
+    waveforms = [
+        (
+            F.pad(wf, (0, max_len - wf.shape[-1]))
+            if wf.shape[-1] < max_len
+            else wf[..., :max_len]
+        )
+        for wf in waveforms
+    ]
+
+    return torch.stack(waveforms), torch.tensor(labels)
 
 
 def get_dataset(
@@ -93,4 +105,17 @@ def get_dataloader(
         batch_size=batch_size,
         shuffle=True,
         num_workers=4,
+        collate_fn=collate_fn,
+    )
+
+
+def get_transform():
+    return MelSpectrogram(
+        sample_rate=16000,
+        n_fft=400,
+        win_length=400,
+        hop_length=160,
+        f_min=0,
+        f_max=8000,
+        n_mels=64,
     )

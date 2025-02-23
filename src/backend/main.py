@@ -49,12 +49,15 @@ UPLOAD_DIR = os.path.join(
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Global model variables; initially loaded from disk
-classes_idx = get_classes(dataset_path=ROOT_DATA_DIR)
-classes = [cls.split("-")[-1] for cls in list(classes_idx.keys())]
-num_classes = len(classes)
-classifier_model = get_model(num_classes=num_classes)
-classifier_model.load_state_dict(torch.load(weight_path, map_location=device))
-classifier_model.eval()
+class_idx = None
+classes = []
+# classes_idx = get_classes(dataset_path=ROOT_DATA_DIR)
+# classes = [cls.split("-")[-1] for cls in list(classes_idx.keys())]
+num_classes = None
+classifier_model = None
+# classifier_model = get_model(num_classes=num_classes)
+# classifier_model.load_state_dict(torch.load(weight_path, map_location=device))
+# classifier_model.eval()
 
 
 class TrainRequest(BaseModel):
@@ -117,6 +120,14 @@ async def get_weights():
     else:
         raise HTTPException(status_code=404, detail="Weights file not found")
 
+
+def save_images(
+    img_data: bytes, class_name: str, index: int
+):
+    filename = f"{class_name}_{index}.jpg"
+    with open(f"../dataset/{filename}", "wb") as f:
+        f.write(img_data)
+    return filename
 
 @app.websocket("/ws/upload_images")
 async def websocket_upload_images(websocket):
