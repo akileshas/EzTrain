@@ -1,5 +1,6 @@
 from typing import List
 
+import PIL
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
@@ -26,4 +27,11 @@ def preprocess_image(
     transform: transforms.Compose,
 ) -> torch.Tensor:
     image = Image.open(image_path).convert("RGB")
+    return transform(image).unsqueeze(0)
+
+
+def preprocess_pil_image(
+    image: PIL.Image.Image,
+    transform: transforms.Compose,
+) -> torch.Tensor:
     return transform(image).unsqueeze(0)

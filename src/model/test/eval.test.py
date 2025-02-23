@@ -22,6 +22,7 @@ def test():
     label = dataset.get_classes()
     class_labels = list(label.keys())
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     predict_img = os.path.join(
         os.path.dirname(__file__),
         "../../dataset/class-2/-_jpg.rf.255402a0e8a5294cfd0e02c42e37ecc7.jpg",

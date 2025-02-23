@@ -20,6 +20,7 @@ def train_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
+    loss_values = []
     for epoch in range(num_epochs):
         total_loss = 0.0
         for images, labels in dataloader:
@@ -32,7 +33,12 @@ def train_model(
             optimizer.step()
 
             total_loss += loss.item()
+            loss_values.append(
+                round(loss.item() * 100, 5),
+            )
 
-        print(
-            f"Epoch [{epoch+1}/{num_epochs}], Loss: {total_loss / len(dataloader):.4f}"
-        )
+        avg_loss = total_loss / \
+            len(dataloader) if len(dataloader) > 0 else float("inf")
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}")
+
+    return loss_values
