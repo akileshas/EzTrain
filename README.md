@@ -83,7 +83,7 @@ Follow these steps to set up and run the EzTrain Platform locally.
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - [pip](https://pip.pypa.io/en/stable/installation/)
 - [virtualenv](https://virtualenv.pypa.io/en/latest/installation.html)
 
