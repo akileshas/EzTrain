@@ -19,6 +19,8 @@ def test():
         "../weights/v1.pth", weights_only=True))
     classifier.eval()
 
+    label = dataset.get_classes()
+    class_labels = list(label.keys())
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     predict_img = os.path.join(
         os.path.dirname(__file__),
@@ -36,6 +38,7 @@ def test():
         classifier,
         tensor_img,
         device="cuda",
+        class_labels=class_labels,
     )
     print(pred)
 

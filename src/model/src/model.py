@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+from torch.nn import functional as F
 from torchvision.models.mobilenetv2 import MobileNet_V2_Weights
 
 
@@ -39,10 +40,22 @@ def predict(
     model,
     image,
     device,
+    class_labels,
 ):
     model.eval()
     model.to(device)
     with torch.no_grad():
         output = model(image)
-        _, predicted = torch.max(output, 1)
-        return predicted.item()
+        probabilities = F.softmax(output, dim=1)
+        probabilities = probabilities.cpu().numpy().tolist()[0]
+        predicted_class = torch.argmax(output, dim=1).cpu().numpy()[0]
+
+    result = [
+        {
+            "class": class_labels[i].split("-")[-1],
+            "percent": round(prob * 100, 2),
+        }
+        for i, prob in enumerate(probabilities)
+    ]
+
+    return result, predicted_class

@@ -10,7 +10,9 @@ def is_valid_class(directory):
     return directory.startswith("class-")
 
 
-def get_classes(dataset_path):
+def get_classes(
+    dataset_path: str = ROOT_DATA_DIR,
+):
     class_dirs = [
         d
         for d in os.listdir(dataset_path)
