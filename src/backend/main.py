@@ -1,4 +1,5 @@
 import os
+import sys
 import base64
 import threading
 import asyncio
@@ -11,6 +12,10 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 from model.api.images import train, model_predict
 from model.mobilenet.constants import ROOT_DATA_DIR, TRANSFORM
