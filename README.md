@@ -44,42 +44,36 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 
 ## Directory Format
 ```
-├── docs
-│   └── index.ts
-├── LICENSE
-├── README.md
-├── src
-│   ├── audio_dataset
-│   │   └── README.md
-│   ├── backend
-│   │   ├── main.py
-│   │   └── requirements.txt
-│   ├── dataset
-│   │   ├── README.md
-│   │   └── sample.py
-│   ├── frontend
-│   │   ├── bun.lock
-│   │   ├── main.ts
-│   │   ├── next.config.ts
-│   │   ├── next-env.d.ts
-│   │   ├── node_modules
-│   │   ├── package.json
-│   │   ├── postcss.config.mjs
-│   │   ├── public
-│   │   ├── README.md
-│   │   ├── src
-│   │   ├── tailwind.config.ts
-│   │   └── tsconfig.json
-│   └── model
-│       ├── api
-│       ├── audionet
-│       ├── image-export.py
-│       ├── mobilenet
-│       ├── requirements.txt
-│       ├── test
-│       └── weights
-└── test
-    └── main.test.py
+└─── src
+   ├── audio_dataset
+   │   └── README.md
+   ├── backend
+   │   ├── main.py
+   │   └── requirements.txt
+   ├── dataset
+   │   ├── README.md
+   │   └── sample.py
+   ├── frontend
+   │   ├── bun.lock
+   │   ├── main.ts
+   │   ├── next.config.ts
+   │   ├── next-env.d.ts
+   │   ├── node_modules
+   │   ├── package.json
+   │   ├── postcss.config.mjs
+   │   ├── public
+   │   ├── README.md
+   │   ├── src
+   │   ├── tailwind.config.ts
+   │   └── tsconfig.json
+   └── model
+       ├── api
+       ├── audionet
+       ├── image-export.py
+       ├── mobilenet
+       ├── requirements.txt
+       ├── test
+       └── weights
 ```
 
 ## Getting Started
