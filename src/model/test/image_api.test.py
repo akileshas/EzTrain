@@ -10,13 +10,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 def test():
-    from PIL import Image
-
     import mobilenet.constants as const
     import mobilenet.dataset as dataset
     import mobilenet.model as model
     import mobilenet.preprocess as procs
     from model.api import images as img
+    from PIL import Image
 
     image_path = os.path.join(
         os.path.dirname(__file__),

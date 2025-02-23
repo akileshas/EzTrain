@@ -2,3 +2,10 @@ ultralytics
 alibi-detect
 avalanche-lib[all]
 lightning
+librosa
+torch
+torchvision
+torchaudio
+numpy
+pandas
+scipy

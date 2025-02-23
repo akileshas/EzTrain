@@ -57,7 +57,8 @@ def train(
 
         return True, train_loss
 
-    except Exception:
+    except Exception as err:
+        print("Error: ", err)
         return False
 
 
