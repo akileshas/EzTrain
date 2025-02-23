@@ -43,6 +43,7 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 - **Pillow**: Python Imaging Library (PIL) fork for image processing.
 
 ## Directory Format
+```
 ├── docs
 │   └── index.ts
 ├── LICENSE
@@ -79,7 +80,7 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 │       └── weights
 └── test
     └── main.test.py
-
+```
 
 ## Getting Started
 
