@@ -198,7 +198,7 @@ The server will start on `http://127.0.0.1:8000/`.
 
 ## Contributing
 
-We welcome contributions to enhance the Trainable AI Platform. Please follow these steps:
+We welcome contributions to enhance the EzTrain Platform. Please follow these steps:
 
 1. Fork the repository.
 2. Create a new branch: `git checkout -b feature/your-feature-name`.
@@ -212,4 +212,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-Elevate your AI projects with the Trainable AI Platform—where seamless integration meets powerful machine learning capabilities. 
+Elevate your AI projects with the EzTrain Platform—where seamless integration meets powerful machine learning capabilities. 
