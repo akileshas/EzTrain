@@ -6,17 +6,18 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 
 - [Features](#features)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Configuration](#configuration)
-  - [Running the Application](#running-the-application)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Configuration](#configuration)
+    - [Running the Application](#running-the-application)
 - [API Endpoints](#api-endpoints)
-  - [Upload Images](#1-upload-images)
-  - [Train Model](#2-train-model)
-  - [Download Model Weights](#3-download-model-weights)
+    - [Upload Images](#1-upload-images)
+    - [Train Model](#2-train-model)
+    - [Download Model Weights](#3-download-model-weights)
 - [WebSocket Events](#websocket-events)
-  - [Upload Images](#1-upload-images-1)
-  - [Predict](#2-predict)
+    - [Upload Images](#1-upload-images-1)
+    - [Predict](#2-predict)
+- [Images](#images)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -28,6 +29,7 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 - **Downloadable Model Weights**: Easily download trained model weights for external use or backup.
 
 ## Image Classification Architecture
+
 - **Model**: mobilenet_v2
 - **Optimizer**: Adam
 - **Loss Function**: Sparse Categorical Crossentropy
@@ -36,6 +38,7 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 - **Training Technique**: Transfer Learning
 
 ## Packages Used
+
 - **FastAPI**: Web framework for building APIs with Python 3.6+ based on standard Python type hints.
 - **Torch**: Open-source machine learning library for Python, used for training and deploying models.
 - **TorchVision**: Library of vision-specific datasets, models, and transforms for PyTorch.
@@ -43,6 +46,7 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 - **Pillow**: Python Imaging Library (PIL) fork for image processing.
 
 ## Directory Format
+
 ```
 └─── src
    ├── audio_dataset
@@ -79,7 +83,6 @@ Welcome to the EzTrain Platform! This repository offers a comprehensive solution
 ## Getting Started
 
 Follow these steps to set up and run the EzTrain Platform locally.
-
 
 ### Prerequisites
 
@@ -134,8 +137,8 @@ The server will start on `http://127.0.0.1:8000/`.
 
     ```json
     {
-        "images": ["data:image/png;base64,...", "data:image/png;base64,..."],
-        "class": "class_name"
+    	"images": ["data:image/png;base64,...", "data:image/png;base64,..."],
+    	"class": "class_name"
     }
     ```
 
@@ -148,9 +151,9 @@ The server will start on `http://127.0.0.1:8000/`.
 
     ```json
     {
-        "num_epochs": 10,
-        "batch_size": 32,
-        "learning_rate": 0.001
+    	"num_epochs": 10,
+    	"batch_size": 32,
+    	"learning_rate": 0.001
     }
     ```
 
@@ -171,8 +174,8 @@ The server will start on `http://127.0.0.1:8000/`.
 
     ```json
     {
-        "images": ["data:image/png;base64,...", "data:image/png;base64,..."],
-        "class": "class_name"
+    	"images": ["data:image/png;base64,...", "data:image/png;base64,..."],
+    	"class": "class_name"
     }
     ```
 
@@ -184,7 +187,7 @@ The server will start on `http://127.0.0.1:8000/`.
 
     ```json
     {
-        "image": "data:image/png;base64,..."
+    	"image": "data:image/png;base64,..."
     }
     ```
 
@@ -192,9 +195,16 @@ The server will start on `http://127.0.0.1:8000/`.
 
     ```json
     {
-        "class": "predicted_class"
+    	"class": "predicted_class"
     }
     ```
+
+## Images
+
+![Home Page](./asserts/image_1.png)
+![Create New Project](./asserts/image_2.png)
+![Image Classifier](./asserts/image_3.png)
+![Audio Classifier](./asserts/image_4.png)
 
 ## Contributing
 
@@ -212,4 +222,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-Elevate your AI projects with the EzTrain Platform—where seamless integration meets powerful machine learning capabilities. 
+Elevate your AI projects with the EzTrain Platform—where seamless integration meets powerful machine learning capabilities.
