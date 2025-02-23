@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 def test():
-    from src.dataset import get_dataloader
+    from mobilenet.dataset import get_dataloader
 
     train_loader = get_dataloader()
 

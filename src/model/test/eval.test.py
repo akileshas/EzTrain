@@ -10,9 +10,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 def test():
-    import src.dataset as dataset
-    import src.model as model
-    import src.preprocess as pp
+    import mobilenet.dataset as dataset
+    import mobilenet.model as model
+    import mobilenet.preprocess as pp
 
     classifier = model.get_model(num_classes=2)
     classifier.load_state_dict(torch.load(

@@ -9,10 +9,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 def test():
-    import src.dataset as dataset
-    import src.model as model
-    import src.preprocess as pp
-    import src.train as train
+    import mobilenet.dataset as dataset
+    import mobilenet.model as model
+    import mobilenet.preprocess as pp
+    import mobilenet.train as train
 
     # Load the dataset
     dataloader = dataset.get_dataloader()
