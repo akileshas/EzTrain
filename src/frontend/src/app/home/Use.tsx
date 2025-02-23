@@ -11,9 +11,8 @@ export default function HowToUseSection() {
         {/* 1. Gather */}
         <div className="flex flex-col items-center text-center">
           <div className="w-32 h-32 bg-gray-200 flex items-center justify-center mb-4">
-            <span className="text-xs text-gray-500">
-              Illustration of example cats
-            </span>
+           
+						<img src="1.svg" alt="1" />
           </div>
           <h3 className="text-3xl font-bold mb-2">1 Gather</h3>
           <p className="text-gray-600 h-24 w-60 mb-2 mt-4">
@@ -25,9 +24,9 @@ export default function HowToUseSection() {
         {/* 2. Train */}
         <div className="flex flex-col items-center text-center">
           <div className="w-32 h-32 bg-gray-200 flex items-center justify-center mb-4">
-            <span className="text-xs text-gray-500">
-              Illustration of button being clicked that reads Train Model
-            </span>
+            
+						<img src="2.svg" alt="2" />
+
           </div>
           <h3 className="text-3xl font-bold mb-2">2 Train</h3>
           <p className="text-gray-600 h-24 w-60 mb-2 mt-4">
@@ -39,9 +38,9 @@ export default function HowToUseSection() {
         {/* 3. Export */}
         <div className="flex flex-col items-center text-center">
           <div className="w-32 h-32 bg-gray-200 flex items-center justify-center mb-4">
-            <span className="text-xs text-gray-500">
-              Illustration of a desktop and mobile web browser containing a sample teachable machine project
-            </span>
+            
+						<img src="3.svg" alt="3" />
+
           </div>
           <h3 className="text-3xl font-bold mb-2">3 Export</h3>
           <p className="text-gray-600 h-24 w-60 mb-2 mt-4">
