@@ -1,213 +1,185 @@
-import eventlet
-eventlet.monkey_patch()
-
-import sys
 import os
 import base64
 import threading
-from time import sleep
+import asyncio
 from io import BytesIO
 from PIL import Image
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
+import torch
+from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.websockets import WebSocketDisconnect
+from pydantic import BaseModel
 
-from model.api.images import train, predict, model_predict
+from model.api.images import train, model_predict
 from model.mobilenet.constants import ROOT_DATA_DIR, TRANSFORM
 from model.mobilenet.dataset import get_classes
-from model.mobilenet.preprocess import (
-    get_transform,
-    preprocess_image,
-    preprocess_pil_image
-)
+from model.mobilenet.preprocess import get_transform
 from model.mobilenet.model import get_model
-from time import sleep
-from flask import Flask
-from flask import request, jsonify
-from flask_socketio import SocketIO, emit
-from flask_cors import CORS
-from flask import send_file
 
-app = Flask(__name__)
-CORS(app)
-socketio = SocketIO(
-    app, cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024
-)#100 MB
+app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust as necessary
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Model Configuration
 transform = TRANSFORM
-transform_augmented = get_transform(
-    augment=True,
-)
-dir = ROOT_DATA_DIR
+transform_augmented = get_transform(augment=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 weight_path = os.path.join(
     os.path.dirname(__file__),
     "../model/weights/mobilenet_v1.pth",
 )
-num_classes = None
-classes = None
-classes_idx = None
-num_classes = None
-classifier_model = None
-
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dataset')
 
 UPLOAD_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dataset"
 )
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Global model variables; initially loaded from disk
+classes_idx = get_classes(dataset_path=ROOT_DATA_DIR)
+classes = [cls.split("-")[-1] for cls in list(classes_idx.keys())]
+num_classes = len(classes)
+classifier_model = get_model(num_classes=num_classes)
+classifier_model.load_state_dict(torch.load(weight_path, map_location=device))
+classifier_model.eval()
 
 
-def convert_image_to_PIL(image_data):
-    """Converts Base64 image data to a PIL Image object."""
+class TrainRequest(BaseModel):
+    num_epochs: int = 5
+    batch_size: int = 32
+    learning_rate: float = 0.001
+
+
+def convert_image_to_PIL(image_data: str):
     try:
-        if isinstance(image_data, str):
-            header, encoded = image_data.split(",", 1)
-            image_bytes = base64.b64decode(encoded)
-        elif isinstance(image_data, (bytes, bytearray)):
-            image_bytes = image_data
-        else:
-            print("Unsupported image data type found")
-            return None
+        header, encoded = image_data.split(",", 1)
+        image_bytes = base64.b64decode(encoded)
         image = Image.open(BytesIO(image_bytes)).convert("RGB")
         return image
     except Exception as e:
         print(f"Error while converting Image: {e}")
+        return None
 
 
-def save_image(image_data, class_name, idx):
-    """Handles saving an image with a unique filename into a class-specific folder."""
+def save_image(image_data: str, class_name: str, idx: int):
     try:
-        class_folder = os.path.join(UPLOAD_DIR, "class-" + class_name.replace(" ", "_"))
-        if not os.path.exists(class_folder):
-            os.makedirs(class_folder)
+        class_folder = os.path.join(UPLOAD_DIR, f"class-{class_name.replace(' ', '_')}")
+        os.makedirs(class_folder, exist_ok=True)
         image = convert_image_to_PIL(image_data)
-        filename = f"{idx}.png"
         if image:
+            filename = f"{idx}.png"
             filepath = os.path.join(class_folder, filename)
             image.save(filepath)
-        return filename
+            return filename
+        else:
+            raise ValueError("Invalid image data")
     except Exception as e:
         print(f"Error saving image {idx}: {e}")
-        return f"Error {idx} : {e}"
+        return None
 
 
-@socketio.on("upload_images")
-def handle_upload_images(data):
-    """
-    Expected data format:
-    {
-        "images": [list of Base64 data URLs or binary blobs],
-        "class": "class label"
-    }
-    """
-    print("Socket received data")
-    images = data.get("images", [])
-    class_name = data.get("class", "unknown")
-    num_images = len(images)
-    print(f"Received {num_images} images for class '{class_name}'")
-
-    if num_images == 0:
-        print(data.get("images", []))
-        emit("response", {"message": "No images received."})
-        return
-
-    results = [None] * num_images
-
-    def process_image(index, img_data):
-        results[index] = save_image(img_data, class_name, index)
-
-    threads = []
-    for idx, image_data in enumerate(images):
-        thread = threading.Thread(target=process_image, args=(idx, image_data))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
-
-    saved_files = [filename for filename in results if filename]
-    response_message = f"Saved {len(saved_files)} images out of {num_images}."
-    print(response_message)
-    emit("response", {"message": response_message, "files": saved_files})
-
-
-@socketio.on("predict")
-def imagePredict(data):
-    """
-    Used to predict stream of data
-    Expected data format:
-    {
-        "image": [list of Base64 data URLs or binary blobs],
-    }
-    returns
-    {
-        "class": predicted class,
-    }
-    """
-    image = data.get("image", None)
-    breakLoop = data.get("break", False)
-    image = convert_image_to_PIL(image)
-    while True:
-        if breakLoop or image is None:
-            break
-        result = model_predict(
-            classifier_model=classifier_model,
-            transform_augmented=transform_augmented,
-            device=device,
-            classes=classes,
-            image=image,
-        )
-        if result[0]:
-            emit("predict_response", result)
-        else:
-            print("Internal Server Error")
-            emit("predict_reponse",{"message":"Internal Server Error"})
-            break
-        sleep(0.1)
-
-
-@app.route("/")
-def index():
-    return "Flask SocketIO Server is running."
-
-
-@app.route("/train", methods=["POST"])
-def train_route():
-    data = request.get_json()
-
-    num_epochs = data.get('num_epochs', 5)
-    batch_size = data.get('batch_size', 32)
-    learning_rate = data.get('learning_rate', 0.001)
-
-    result = train(num_epochs=num_epochs, batch_size=batch_size, learning_rate=learning_rate)
-
-    # Loading the model globally
-    classes_idx = get_classes(
-        dataset_path=dir,
+@app.post("/train")
+async def train_route(request: TrainRequest):
+    result = train(
+        num_epochs=request.num_epochs,
+        batch_size=request.batch_size,
+        learning_rate=request.learning_rate,
     )
+    global classifier_model, classes, num_classes
+
+    classes_idx = get_classes(dataset_path=ROOT_DATA_DIR)
     classes = [cls.split("-")[-1] for cls in list(classes_idx.keys())]
     num_classes = len(classes)
-    classifier_model = get_model(
-        num_classes=num_classes,
-    )
-    classifier_model.load_state_dict(
-        torch.load(
-            weights_path,
-            weights_only=True,
-        ),
-    ),
+    classifier_model = get_model(num_classes=num_classes)
+    classifier_model.load_state_dict(torch.load(weight_path, map_location=device))
     classifier_model.eval()
 
-    return jsonify({"message": "Training Completed", "result": result})
+    return JSONResponse(content={"message": "Training completed", "result": result})
 
 
-@app.route("/get_weights", methods=["GET"])
-def get_weights():
-    return send_file(weight_path,as_attachment=True)
+@app.get("/get_weights")
+async def get_weights():
+    if os.path.exists(weight_path):
+        return FileResponse(weight_path, filename="mobilenet_v1.pth", media_type="application/octet-stream")
+    else:
+        raise HTTPException(status_code=404, detail="Weights file not found")
 
-if __name__ == "__main__":
-    socketio.run(app, debug=True)
+
+@app.websocket("/ws/upload_images")
+async def websocket_upload_images(websocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_json()
+            images = data.get("images", [])
+            class_name = data.get("class", "unknown")
+            num_images = len(images)
+            print(f"Received {num_images} images for class '{class_name}'")
+
+            if num_images == 0:
+                await websocket.send_json({"message": "No images received."})
+                continue
+
+            results = [None] * num_images
+
+            def process_image(index, img_data):
+                results[index] = save_image(img_data, class_name, index)
+
+            threads = []
+            for idx, image_data in enumerate(images):
+                thread = threading.Thread(target=process_image, args=(idx, image_data))
+                threads.append(thread)
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+
+            saved_files = [filename for filename in results if filename]
+            response_message = f"Saved {len(saved_files)} images out of {num_images}."
+            print(response_message)
+            await websocket.send_json({"message": response_message, "files": saved_files})
+    except WebSocketDisconnect:
+        print("Client disconnected")
+
+
+@app.websocket("/ws/predict")
+async def websocket_predict(websocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_json()
+            image_data = data.get("image", None)
+            break_loop = data.get("break", False)
+
+            if break_loop or image_data is None:
+                break
+
+            image = convert_image_to_PIL(image_data)
+            if image:
+                result = model_predict(
+                    classifier_model=classifier_model,
+                    transform_augmented=transform_augmented,
+                    device=device,
+                    classes=classes,
+                    image=image,
+                )
+                if result[0]:
+                    await websocket.send_json({"class": result[1]})
+                else:
+                    print("Internal Server Error")
+                    await websocket.send_json({"message": "Internal Server Error"})
+                    break
+            else:
+                await websocket.send_json({"message": "Invalid image data"})
+                break
+            await asyncio.sleep(0.1)
+    except WebSocketDisconnect:
+        print("Client disconnected")
