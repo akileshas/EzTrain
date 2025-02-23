@@ -1,5 +1,4 @@
 import eventlet
-
 eventlet.monkey_patch()
 
 import sys
@@ -28,6 +27,7 @@ from flask import Flask
 from flask import request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+from flask import send_file
 
 app = Flask(__name__)
 CORS(app)
@@ -202,8 +202,12 @@ def train_route():
     ),
     classifier_model.eval()
 
-    return jsonify({"message": "Training started", "result": result})
+    return jsonify({"message": "Training Completed", "result": result})
 
+
+@app.route("/get_weights", methods=["GET"])
+def get_weights():
+    return send_file(weight_path,as_attachment=True)
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
