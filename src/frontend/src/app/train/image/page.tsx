@@ -1,8 +1,7 @@
 "use client";
 
 import Camera from "./Camera";
-import React, { useState, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+import React, { useState, useRef, useEffect } from "react";
 
 type DatasetBlock = {
 	id: number;
@@ -17,13 +16,25 @@ export default function DatasetPage() {
 	]);
 	const [classImages, setClassImages] = useState<Record<string, string[]>>({});
 	const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-	const socketRef = useRef<Socket | null>(null);
 	const [modelAvailable, setModelAvailable] = useState(false);
 
-	// Initialize socket connection
-	if (!socketRef.current) {
-		socketRef.current = io("http://localhost:5000");
-	}
+	// Create a native WebSocket connection to your FastAPI /ws/upload_images endpoint.
+	const wsRef = useRef<WebSocket | null>(null);
+
+	useEffect(() => {
+		if (!wsRef.current) {
+			wsRef.current = new WebSocket("ws://localhost:8000/ws/upload_images");
+			wsRef.current.onopen = () => {
+				console.log("WebSocket connected to /ws/upload_images");
+			};
+			wsRef.current.onclose = () => {
+				console.log("WebSocket disconnected");
+			};
+			wsRef.current.onmessage = (event) => {
+				console.log("Received from server:", event.data);
+			};
+		}
+	}, []);
 
 	const addDatasetBlock = () => {
 		const newId =
@@ -59,26 +70,34 @@ export default function DatasetPage() {
 	) => {
 		if (!event.target.files) return;
 		const files = Array.from(event.target.files);
+		// IMPORTANT: For proper backend processing, you may need to convert the files to base64 strings.
 		const newImages = files.map((file) => URL.createObjectURL(file));
-
 		setClassImages((prev) => ({
 			...prev,
 			[className]: [...(prev[className] || []), ...newImages],
 		}));
 	};
 
-	const handleTrainModel = () => {
+	// Instead of training the model, we now send images to the /ws/upload_images endpoint.
+	const handleUploadImages = () => {
 		if (Object.keys(classImages).length === 0) {
-			alert("No images captured for training.");
+			alert("No images captured for upload.");
 			return;
 		}
-		socketRef.current?.emit("train_model", classImages);
-		alert("Training started!");
-		setModelAvailable(true);
-		console.log(modelAvailable);
+		if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+			for (const [className, images] of Object.entries(classImages)) {
+				const payload = { images, class: className };
+				wsRef.current.send(JSON.stringify(payload));
+				console.log("Sent upload for", className, payload);
+			}
+			alert("Image upload started!");
+			setModelAvailable(true);
+		} else {
+			alert("WebSocket connection not established.");
+		}
 	};
 
-	// Placeholder download function
+	// Placeholder download function remains unchanged.
 	const handleDownload = () => {
 		alert("Download started!");
 		setIsExportModalOpen(false);
@@ -170,9 +189,9 @@ export default function DatasetPage() {
 					</button>
 				</div>
 
-				{/* Right Part: Fixed Training & Preview */}
+				{/* Right Part: Fixed Upload & Preview */}
 				<div className="fixed right-40 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-8 bg-white p-4 shadow-lg rounded-lg">
-					<h3 className="text-xl font-bold">Preview Before Training</h3>
+					<h3 className="text-xl font-bold">Preview Before Upload</h3>
 
 					{/* Image Preview Section */}
 					<div className="w-72 h-72 overflow-y-auto border border-gray-400 rounded p-2 bg-gray-100">
@@ -194,10 +213,10 @@ export default function DatasetPage() {
 					</div>
 
 					<button
-						onClick={handleTrainModel}
+						onClick={handleUploadImages}
 						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
 					>
-						Train Model
+						 Train Images
 					</button>
 					<div className="bg-white p-4 rounded shadow flex flex-col items-center">
 						<h3 className="text-xl font-bold mb-4">Export</h3>
@@ -209,7 +228,7 @@ export default function DatasetPage() {
 							Export Model
 						</button>
 						<p className="mt-4 text-sm text-gray-600 text-center">
-							You must train a model on the left before you can preview it here.
+							You must upload images on the left before you can export the model.
 						</p>
 					</div>
 				</div>
