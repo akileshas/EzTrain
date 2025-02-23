@@ -10,6 +10,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 from model.api.images import train, predict, model_predict
+from model.mobilenet.constants import ROOT_DATA_DIR, TRANSFORM
+from model.mobilenet.dataset import get_classes
+from model.mobilenet.preprocess import (
+    get_transform,
+    preprocess_image,
+    preprocess_pil_image
+)
+from model.mobilenet.model import get_model
 from time import sleep
 from flask import Flask
 from flask import request, jsonify
@@ -25,7 +33,24 @@ CORS(app)
 app.config["SECRET_KEY"] = "secret!"
 socketio = SocketIO(
     app, cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024
-)#100 MB  
+)#100 MB
+
+# Model Configuration
+transform = TRANSFORM
+transform_augmented = get_transform(
+    augment=True,
+)
+dir = ROOT_DATA_DIR
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+weight_path = os.path.join(
+    os.path.dirname(__file__),
+    "../model/weights/mobilenet_v1.pth",
+)
+num_classes = None
+classes = None
+classes_idx = None
+num_classes = None
+classifier_model = None
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dataset')
 
@@ -131,14 +156,19 @@ def imagePredict(data):
     while True:
         if breakLoop or image is None:
             break
-        result = model_predict(image)
+        result = model_predict(
+            classifier_model=classifier_model,
+            transform_augmented=transform_augmented,
+            device=device,
+            classes=classes,
+            image=image,
+        )
         if result[0]:
             emit("predict_response",result)
         else:
             print("Internal Server Error")
             break
         sleep(0.1)
-        
 
 
 
@@ -156,6 +186,23 @@ def train_route():
     learning_rate = data.get('learning_rate', 0.001)
 
     result = train(num_epochs=num_epochs, batch_size=batch_size, learning_rate=learning_rate)
+
+    # Loading the model globally
+    classes_idx = get_classes(
+        dataset_path=dir,
+    )
+    classes = [cls.split("-")[-1] for cls in list(classes_idx.keys())]
+    num_classes = len(classes)
+    classifier_model = get_model(
+        num_classes=num_classes,
+    )
+    classifier_model.load_state_dict(
+        torch.load(
+            weights_path,
+            weights_only=True,
+        ),
+    ),
+    classifier_model.eval()
 
     return jsonify({"message": "Training started", "result": result})
 
