@@ -7,8 +7,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 def test():
-    import mobilenet.preprocess as pp
     from PIL import Image
+
+    import mobilenet.preprocess as pp
 
     image_path = os.path.join(
         os.path.dirname(__file__),
